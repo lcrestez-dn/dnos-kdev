@@ -1,0 +1,75 @@
+#! /bin/bash -e
+
+print_help()
+{
+    cat >&2 <<MSG
+$(basename "$0"): Kernel tool for dnos
+
+This run kernel tools inside a docker container.
+MSG
+}
+
+parse_args()
+{
+    # Defaults
+    opt_do_build="1"
+    opt_extra_args=()
+
+    # Scan args
+    local LONG_OPTS=\
+"help,do-build,no-build"
+
+    local opts
+    opts=$(getopt -n "$0" -l "$LONG_OPTS" -o h -- "$@")
+    eval set -- "$opts"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+        -h|--help) print_help; exit 1;;
+        --do-build) opt_do_build=1;;
+        --no-build) opt_do_build=0;;
+        --)
+            if [[ $# == 1 ]]; then
+                opt_subcmd="run"
+                opt_extra_args=(bash)
+            else
+                shift
+                opt_subcmd="$1"
+                shift
+                opt_extra_args=("$@")
+                break
+            fi
+            ;;
+        *)
+            echo >&2 "unrecognized argument $1"
+            exit 2
+            ;;
+        esac
+        shift
+    done
+}
+
+docker_build()
+{
+    (
+        cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/ubuntu-bionic-docker"
+        docker build . -t "$DOCKER_IMAGE"
+    )
+}
+
+main()
+{
+    parse_args "$@"
+    export DOCKER_IMAGE="dnos-kdev-bionic:latest"
+    if [[ $opt_do_build == 1 ]]; then
+        docker_build
+    fi
+
+    case "$opt_subcmd" in
+    run) docker run -i -t "${DOCKER_ARGS[@]}" "$DOCKER_IMAGE" "${opt_extra_args[@]}" ;;
+    *)
+        echo >&2 "unknown subcmd $opt_subcmd"
+        exit 2
+    esac
+}
+
+main "$@"
