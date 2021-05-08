@@ -14,12 +14,15 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F2EDC64DC5AEE1F6B9C
 RUN apt-get update
 
 RUN apt-get install -y --no-install-recommends \
-    dumb-init \
-    kpatch \
-    kpatch-build \
     linux-headers-4.15.0-23-generic \
     linux-image-4.15.0-23-generic \
-    linux-image-4.15.0.23-generic-dbgsym \
+    linux-image-4.15.0.23-generic-dbgsym
+
+RUN apt-get install -y --no-install-recommends \
+    dumb-init \
+    kpatch \
+    fakeroot \
+    kpatch-build \
     systemtap
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
