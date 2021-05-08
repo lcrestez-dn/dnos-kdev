@@ -16,6 +16,7 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
     dumb-init \
     kpatch \
+    kpatch-build \
     linux-headers-4.15.0-23-generic \
     linux-image-4.15.0-23-generic \
     linux-image-4.15.0.23-generic-dbgsym \
