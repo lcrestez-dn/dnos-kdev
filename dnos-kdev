@@ -125,7 +125,17 @@ main()
     local kver=4.15.0-23-generic
 
     case "$opt_subcmd" in
-    run) docker run -i -t "${DOCKER_ARGS[@]}" "$DOCKER_IMAGE" "${opt_extra_args[@]}" ;;
+    run)
+        DOCKER_ARGS+=(-i -t)
+        docker_run "${opt_extra_args[@]}"
+        ;;
+    kpatch-build)
+        DOCKER_ARGS+=(-v ~/.kpatch:/root/.kpatch)
+        docker_run kpatch-build \
+                --vmlinux /usr/lib/debug/boot/vmlinux-"$kver" \
+                --config /boot/config-"$kver" \
+                "${opt_extra_args[@]}"
+        ;;
     remote-staprun)
         DOCKER_ARGS+=(-v /root/.systemtap:/root/.systemtap)
         stap_modname="stap"
