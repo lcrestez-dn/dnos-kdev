@@ -16,6 +16,7 @@ RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
     linux-image-4.15.0-23-generic \
     linux-image-4.15.0.23-generic-dbgsym \
+    linux-headers-4.15.0-23-generic \
     dumb-init \
     systemtap \
     kpatch

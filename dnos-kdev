@@ -5,7 +5,26 @@ print_help()
     cat >&2 <<MSG
 $(basename "$0"): Kernel tool for dnos
 
-This run kernel tools inside a docker container.
+This run kernel debug tools inside a docker container
+
+Options:
+--------
+
+    -h, --help                  Show this message
+    -n, --dry-run               Just print what would be done
+    -r, --ssh-remote            SSH destination (dnos port 2222)
+
+    --extra-args-stap ARGS      Extra arguments for stap
+    --extra-args-staprun ARGS   Extra arguments for staprun
+    --extra-args-stapmod ARGS   Extra arguments for stap module
+
+Subcommands:
+------------
+
+    run                 Run shell command inside the container (default is interactive shell
+    remote-staprun      Build stap.ko inside container and run on --ssh-remote
+
+Default is to run an interactive shell
 MSG
 }
 
@@ -14,19 +33,32 @@ parse_args()
     # Defaults
     opt_do_build="1"
     opt_extra_args=()
+    opt_extra_args_stap=()
+    opt_extra_args_staprun=()
+    opt_extra_args_stapmod=()
 
     # Scan args
     local LONG_OPTS=\
-"help,do-build,no-build"
+"help,\
+do-build,no-build,\
+extra-args-stap:,\
+extra-args-staprun:,\
+extra-args-stapmod:,\
+dry-run"
 
     local opts
-    opts=$(getopt -n "$0" -l "$LONG_OPTS" -o h -- "$@")
+    opts=$(getopt -n "$0" -l "$LONG_OPTS" -o +nhr: -- "$@")
     eval set -- "$opts"
     while [ $# -gt 0 ]; do
         case "$1" in
-        -h|--help) print_help; exit 1;;
-        --do-build) opt_do_build=1;;
-        --no-build) opt_do_build=0;;
+        -h|--help) print_help; exit 1 ;;
+        -n|--dry-run) opt_dry_run=1 ;;
+        --do-build) opt_do_build=1 ;;
+        --no-build) opt_do_build=0 ;;
+        -r|--ssh-remote) shift; opt_ssh_remote=$1 ;;
+        --extra-args-stap) shift; opt_extra_args_stap+=($1) ;;
+        --extra-args-staprun) shift; opt_extra_args_staprun+=($1) ;;
+        --extra-args-stapmod) shift; opt_extra_args_stapmod+=($1) ;;
         --)
             if [[ $# == 1 ]]; then
                 opt_subcmd="run"
@@ -48,12 +80,29 @@ parse_args()
     done
 }
 
+dry_wrap()
+{
+    if [[ ${opt_dry_run:-0} == 1 ]]; then
+        printf >&2 "DRY:%s\n" "$(printf " %q" "$@")"
+        return 0
+    else
+        printf >&2 "RUN:%s\n" "$(printf " %q" "$@")"
+        "$@"
+        return $?
+    fi
+}
+
 docker_build()
 {
     (
-        cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/ubuntu-bionic-docker"
-        docker build . -t "$DOCKER_IMAGE"
+        dry_wrap cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/ubuntu-bionic-docker"
+        dry_wrap docker build . -t "$DOCKER_IMAGE"
     )
+}
+
+docker_run()
+{
+    dry_wrap docker run "${DOCKER_ARGS[@]}" "$DOCKER_IMAGE" "$@"
 }
 
 main()
@@ -64,11 +113,31 @@ main()
         docker_build
     fi
 
+    # mount currently working directory
+    DOCKER_ARGS+=(-v "$PWD:/mnt/cwd")
+    DOCKER_ARGS+=(--workdir /mnt/cwd)
+
+    # Does not change easily:
+    local kver=4.15.0-23-generic
+
     case "$opt_subcmd" in
     run) docker run -i -t "${DOCKER_ARGS[@]}" "$DOCKER_IMAGE" "${opt_extra_args[@]}" ;;
+    remote-staprun)
+        DOCKER_ARGS+=(-v /root/.systemtap:/root/.systemtap)
+        stap_modname="stap"
+        stap_modfile="$stap_modname.ko"
+        docker_run stap -r"$kver" -p4 -m "$stap_modname" "${opt_extra_args_stap[@]}" "${opt_extra_args[@]}"
+        remote_tmpdir="/tmp/"
+        dry_wrap scp "$stap_modfile" "$opt_ssh_remote:$remote_tmpdir"
+        dry_wrap ssh "$opt_ssh_remote" staprun \
+                "${opt_extra_args_staprun[@]}" \
+                "$remote_tmpdir/$stap_modfile" \
+                "${opt_extra_args_stapmod[@]}"
+        ;;
     *)
         echo >&2 "unknown subcmd $opt_subcmd"
         exit 2
+        ;;
     esac
 }
 
