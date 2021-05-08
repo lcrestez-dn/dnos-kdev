@@ -14,6 +14,7 @@ Options:
     -n, --dry-run               Just print what would be done
     -r, --ssh-remote            SSH destination (dnos port 2222)
 
+    --extra-args-docker ARGS    Extra arguments for docker run
     --extra-args-stap ARGS      Extra arguments for stap
     --extra-args-staprun ARGS   Extra arguments for staprun
     --extra-args-stapmod ARGS   Extra arguments for stap module
@@ -33,6 +34,7 @@ parse_args()
     # Defaults
     opt_do_build="1"
     opt_extra_args=()
+    opt_extra_args_docker=()
     opt_extra_args_stap=()
     opt_extra_args_staprun=()
     opt_extra_args_stapmod=()
@@ -41,6 +43,7 @@ parse_args()
     local LONG_OPTS=\
 "help,\
 do-build,no-build,\
+extra-args-docker:,\
 extra-args-stap:,\
 extra-args-staprun:,\
 extra-args-stapmod:,\
@@ -56,6 +59,7 @@ dry-run"
         --do-build) opt_do_build=1 ;;
         --no-build) opt_do_build=0 ;;
         -r|--ssh-remote) shift; opt_ssh_remote=$1 ;;
+        --extra-args-docker) shift; opt_extra_args_docker+=($1) ;;
         --extra-args-stap) shift; opt_extra_args_stap+=($1) ;;
         --extra-args-staprun) shift; opt_extra_args_staprun+=($1) ;;
         --extra-args-stapmod) shift; opt_extra_args_stapmod+=($1) ;;
@@ -102,7 +106,7 @@ docker_build()
 
 docker_run()
 {
-    dry_wrap docker run "${DOCKER_ARGS[@]}" "$DOCKER_IMAGE" "$@"
+    dry_wrap docker run "${DOCKER_ARGS[@]}" "${opt_extra_args_docker[@]}" "$DOCKER_IMAGE" "$@"
 }
 
 main()
