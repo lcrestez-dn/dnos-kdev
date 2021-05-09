@@ -13,16 +13,17 @@ RUN apt-get install -y --no-install-recommends gnupg
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F2EDC64DC5AEE1F6B9C621F0C8CAB6595FDFF622
 RUN apt-get update
 
-RUN apt-get install -y --no-install-recommends \
+RUN bash -c "apt-get install -y --no-install-recommends \
+    {gcc-7,cpp-7,libgcc-7-dev,gcc-7-base,libasan4,libubsan0,libcilkrts5}=7.3.0-16ubuntu3 \
+    {gcc,cpp}=4:7.3.0-3ubuntu2 \
     linux-headers-4.15.0-23-generic \
     linux-image-4.15.0-23-generic \
-    linux-image-4.15.0.23-generic-dbgsym
-
-RUN apt-get install -y --no-install-recommends \
+    linux-image-4.15.0.23-generic-dbgsym \
     dumb-init \
     kpatch \
     fakeroot \
     kpatch-build \
-    systemtap
+    systemtap \
+"
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
