@@ -42,6 +42,9 @@ parse_args()
     opt_extra_args_staprun=()
     opt_extra_args_stapmod=()
 
+    # Does not change easily:
+    kver=4.15.0-23-generic
+
     # Scan args
     local LONG_OPTS=\
 "help,\
@@ -123,9 +126,6 @@ main()
     # mount currently working directory
     DOCKER_ARGS+=(-v "$PWD:/mnt/cwd")
     DOCKER_ARGS+=(--workdir /mnt/cwd)
-
-    # Does not change easily:
-    local kver=4.15.0-23-generic
 
     case "$opt_subcmd" in
     run)
