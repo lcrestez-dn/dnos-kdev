@@ -107,6 +107,17 @@ dry_wrap()
     fi
 }
 
+dry_wrap_exec()
+{
+    if [[ ${opt_dry_run:-0} == 1 ]]; then
+        printf >&2 "DRY EXEC:%s\n" "$(printf " %q" "$@")"
+        exit 0
+    else
+        printf >&2 "EXEC:%s\n" "$(printf " %q" "$@")"
+        exec "$@"
+    fi
+}
+
 docker_build()
 {
     (
@@ -155,7 +166,7 @@ main()
         docker_run stap -r"$kver" -p4 -m "$stap_modname" "${opt_extra_args_stap[@]}" "${opt_extra_args[@]}"
         remote_tmpdir="/tmp/"
         dry_wrap scp "$stap_modfile" "$opt_ssh_remote:$remote_tmpdir"
-        dry_wrap ssh "$opt_ssh_remote" staprun \
+        dry_wrap_exec ssh -t "$opt_ssh_remote" staprun \
                 "${opt_extra_args_staprun[@]}" \
                 "$remote_tmpdir/$stap_modfile" \
                 "${opt_extra_args_stapmod[@]}"
