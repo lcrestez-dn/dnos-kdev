@@ -23,12 +23,17 @@ Subcommands:
 
 run
     Run shell command inside the container (default is interactive shell
+stap
+    Run stap in container with correct -r argument
 remote-staprun
     Build stap.ko inside container and run on --ssh-remote
 kpatch-build
     Run kpatch-build inside the container
 
-Default is to run an interactive shell
+Default is to run an interactive shell.
+
+Subcommands with automatically receive "correct" arguments to reference the
+target kernel so \`stap\` is equivalent to \`run stap -r $kver\`
 MSG
 }
 
@@ -138,6 +143,10 @@ main()
                 --vmlinux /usr/lib/debug/boot/vmlinux-"$kver" \
                 --config /boot/config-"$kver" \
                 "${opt_extra_args[@]}"
+        ;;
+    stap)
+        DOCKER_ARGS+=(-v /root/.systemtap:/root/.systemtap)
+        docker_run stap -r"$kver" "${opt_extra_args_stap[@]}" "${opt_extra_args[@]}"
         ;;
     remote-staprun)
         DOCKER_ARGS+=(-v /root/.systemtap:/root/.systemtap)
