@@ -13,6 +13,7 @@ Options:
 -h, --help                      Show this message
 -n, --dry-run                   Just print what would be done
 -r, --ssh-remote HOST           SSH destination (dnos port 2222)
+-s, --sourcedir SRC             Kernel source dir (only for kpatch).
 --extra-args-docker ARGS        Extra arguments for docker run
 --extra-args-stap ARGS          Extra arguments for stap
 --extra-args-staprun ARGS       Extra arguments for staprun
@@ -29,6 +30,8 @@ remote-staprun
     Build stap.ko inside container and run on --ssh-remote
 kpatch-build
     Run kpatch-build inside the container
+prepare-source
+    Prepare kernel given via --sourcedir.
 
 Default is to run an interactive shell.
 
@@ -46,6 +49,7 @@ parse_args()
     opt_extra_args_stap=()
     opt_extra_args_staprun=()
     opt_extra_args_stapmod=()
+    opt_sourcedir=
 
     # Does not change easily:
     kver=4.15.0-23-generic
@@ -55,6 +59,7 @@ parse_args()
 "help,\
 do-build,no-build,\
 ssh-remote:,\
+sourcedir:,\
 extra-args-docker:,\
 extra-args-stap:,\
 extra-args-staprun:,\
@@ -62,7 +67,7 @@ extra-args-stapmod:,\
 dry-run"
 
     local opts
-    opts=$(getopt -n "$0" -l "$LONG_OPTS" -o +nhr: -- "$@")
+    opts=$(getopt -n "$0" -l "$LONG_OPTS" -o +nhr:s: -- "$@")
     eval set -- "$opts"
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -71,6 +76,7 @@ dry-run"
         --do-build) opt_do_build=1 ;;
         --no-build) opt_do_build=0 ;;
         -r|--ssh-remote) shift; opt_ssh_remote=$1 ;;
+        -s|--sourcedir) shift; opt_sourcedir=$1 ;;
         --extra-args-docker) shift; opt_extra_args_docker+=($1) ;;
         --extra-args-stap) shift; opt_extra_args_stap+=($1) ;;
         --extra-args-staprun) shift; opt_extra_args_staprun+=($1) ;;
@@ -132,6 +138,13 @@ docker_run()
     dry_wrap docker run "${DOCKER_ARGS[@]}" "${opt_extra_args_docker[@]}" "$DOCKER_IMAGE" "$@"
 }
 
+prepare_source()
+{
+    echo >&2 "assume $(printf %q "$opt_sourcedir") is kernel source accessible from docker"
+    docker_run cp /usr/src/linux-headers-$kver/scripts/ubuntu-retpoline-extract-one "$opt_sourcedir/scripts/"
+    docker_run cp /boot/config-$kver "$opt_sourcedir/.config"
+}
+
 main()
 {
     parse_args "$@"
@@ -149,6 +162,13 @@ main()
         DOCKER_ARGS+=(-i -t)
         docker_run "${opt_extra_args[@]}"
         ;;
+    prepare-source)
+        if [[ -z $opt_sourcedir ]]; then
+            echo "Need --sourcedir"
+            exit 1
+        fi
+        prepare_source
+        ;;
     kpatch-build)
         DOCKER_ARGS+=(-v ~/.kpatch:/root/.kpatch)
         # debian scripts pass an explicit KERNELVERSION= argument to make to
@@ -156,10 +176,14 @@ main()
         # to match modmagic.
         export MAKEFLAGS="KERNELVERSION=$kver $MAKEFLAGS"
         DOCKER_ARGS+=(-e MAKEFLAGS)
-        docker_run kpatch-build \
-                --vmlinux /usr/lib/debug/boot/vmlinux-"$kver" \
-                --config /boot/config-"$kver" \
-                "${opt_extra_args[@]}"
+        args=(
+            --vmlinux /usr/lib/debug/boot/vmlinux-"$kver"
+            --config /boot/config-"$kver"
+        )
+        if [[ -n $opt_sourcedir ]]; then
+            args+=(--sourcedir "$opt_sourcedir")
+        fi
+        docker_run kpatch-build "${args[@]}" "${opt_extra_args[@]}"
         ;;
     stap)
         DOCKER_ARGS+=(-v /root/.systemtap:/root/.systemtap)
