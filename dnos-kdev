@@ -54,6 +54,7 @@ parse_args()
     local LONG_OPTS=\
 "help,\
 do-build,no-build,\
+ssh-remote:,\
 extra-args-docker:,\
 extra-args-stap:,\
 extra-args-staprun:,\
