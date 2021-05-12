@@ -25,5 +25,7 @@ RUN bash -c "apt-get install -y --no-install-recommends \
     kpatch-build \
     systemtap \
 "
+COPY build-kpatch.sh .
+RUN ./build-kpatch.sh
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
