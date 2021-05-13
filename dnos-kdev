@@ -18,6 +18,7 @@ Options:
 --extra-args-stap ARGS          Extra arguments for stap
 --extra-args-staprun ARGS       Extra arguments for staprun
 --extra-args-stapmod ARGS       Extra arguments for stap module
+-u, --match-uidgid              Match current uid/gid
 
 Subcommands:
 ------------
@@ -64,10 +65,11 @@ extra-args-docker:,\
 extra-args-stap:,\
 extra-args-staprun:,\
 extra-args-stapmod:,\
+match-uidgid,\
 dry-run"
 
     local opts
-    opts=$(getopt -n "$0" -l "$LONG_OPTS" -o +nhr:s: -- "$@")
+    opts=$(getopt -n "$0" -l "$LONG_OPTS" -o +nhr:s:u -- "$@")
     eval set -- "$opts"
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -81,6 +83,7 @@ dry-run"
         --extra-args-stap) shift; opt_extra_args_stap+=($1) ;;
         --extra-args-staprun) shift; opt_extra_args_staprun+=($1) ;;
         --extra-args-stapmod) shift; opt_extra_args_stapmod+=($1) ;;
+        -u|--match-uidgid) opt_match_uidgid=1 ;;
         --)
             if [[ $# == 1 ]]; then
                 opt_subcmd="run"
@@ -156,6 +159,10 @@ main()
     # mount currently working directory
     DOCKER_ARGS+=(-v "$PWD:/mnt/cwd")
     DOCKER_ARGS+=(--workdir /mnt/cwd)
+
+    if [[ $opt_match_uidgid == 1 ]]; then
+        DOCKER_ARGS+=(--user "$(id -u):$(id -g)")
+    fi
 
     case "$opt_subcmd" in
     run)
