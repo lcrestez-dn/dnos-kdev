@@ -71,10 +71,10 @@ dry-run"
     if [[ $OSTYPE = darwin* ]]; then
         if [[ -x /usr/local/opt/gnu-getopt/bin/getopt ]]; then
             getopt() { /usr/local/opt/gnu-getopt/bin/getopt "$@"; }
+        else
+            echo >&2 "Need gnu getopt"
+            exit 2
         fi
-    else
-        echo >&2 "Need gnu getopt"
-        exit 2
     fi
 
     local opts
