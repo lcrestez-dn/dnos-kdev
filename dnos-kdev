@@ -227,6 +227,14 @@ main()
                 "$remote_tmpdir/$stap_modfile" \
                 "${opt_extra_args_stapmod[@]}"
         ;;
+    restore-kernel)
+        if [[ -z $opt_ssh_remote ]]; then
+            echo >&2 "need --ssh-remote"
+            exit 1
+        fi
+        dry_wrap_exec ssh -t "$opt_ssh_remote" apt-get install --reinstall \
+                "linux-{image,modules,modules-extra,tools,cloud-tools}-$kver"
+        ;;
     *)
         echo >&2 "unknown subcmd $opt_subcmd"
         exit 2
