@@ -68,6 +68,15 @@ extra-args-stapmod:,\
 match-uidgid,\
 dry-run"
 
+    if [[ $OSTYPE = darwin* ]]; then
+        if [[ -x /usr/local/opt/gnu-getopt/bin/getopt ]]; then
+            getopt() { /usr/local/opt/gnu-getopt/bin/getopt "$@"; }
+        fi
+    else
+        echo >&2 "Need gnu getopt"
+        exit 2
+    fi
+
     local opts
     opts=$(getopt -n "$0" -l "$LONG_OPTS" -o +nhr:s:u -- "$@")
     eval set -- "$opts"
