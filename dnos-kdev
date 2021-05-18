@@ -137,10 +137,20 @@ dry_wrap_exec()
     fi
 }
 
+script_dir()
+(
+    cd "$(dirname "${BASH_SOURCE[0]}")"
+    local link
+    while link=$(readlink "$(basename "${BASH_SOURCE[0]}")"); do
+        cd "$(dirname "$link")"
+    done
+    pwd -P
+)
+
 docker_build()
 {
     (
-        dry_wrap cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/ubuntu-bionic-docker"
+        dry_wrap cd "$(script_dir)/ubuntu-bionic-docker"
         dry_wrap docker build . -t "$DOCKER_IMAGE"
     )
 }
