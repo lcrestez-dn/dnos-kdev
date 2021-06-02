@@ -13,7 +13,8 @@ Options:
 -h, --help                      Show this message
 -n, --dry-run                   Just print what would be done
 -r, --ssh-remote HOST           SSH destination (dnos port 2222)
--s, --sourcedir SRC             Kernel source dir (only for kpatch).
+-s, --sourcedir SRC             Kernel source dir (only for kpatch)
+--use-linux-source-package      Set --sourcedir to unpacked source in /usr/src/
 --extra-args-docker ARGS        Extra arguments for docker run
 --extra-args-stap ARGS          Extra arguments for stap
 --extra-args-staprun ARGS       Extra arguments for staprun
@@ -64,6 +65,7 @@ parse_args()
 do-build,no-build,\
 ssh-remote:,\
 sourcedir:,\
+use-linux-source-package,\
 extra-args-docker:,\
 extra-args-stap:,\
 extra-args-staprun:,\
@@ -91,6 +93,7 @@ dry-run"
         --no-build) opt_do_build=0 ;;
         -r|--ssh-remote) shift; opt_ssh_remote=$1 ;;
         -s|--sourcedir) shift; opt_sourcedir=$1 ;;
+        --use-linux-source-package) opt_sourcedir=/usr/src/linux-source-4.15.0 ;;
         --extra-args-docker) shift; opt_extra_args_docker+=($1) ;;
         --extra-args-stap) shift; opt_extra_args_stap+=($1) ;;
         --extra-args-staprun) shift; opt_extra_args_staprun+=($1) ;;
