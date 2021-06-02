@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     linux-headers-${UBUNTU_KERNEL_VERSION} \
     linux-image-${UBUNTU_KERNEL_VERSION} \
     linux-image-${UBUNTU_KERNEL_VERSION}-dbgsym \
+    linux-source-4.15.0=4.15.0-23.25 \
     ca-certificates \
     dumb-init \
     fakeroot \
@@ -32,6 +33,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN mkdir -p /usr/src
 
+# Unpack linux source from ubuntu
+RUN tar -C /usr/src -xf /usr/src/linux-source-4.15.0.tar.bz2
+
+# Install systemtap from git
 ARG SYSTEMTAP_GIT_VERSION=release-4.5
 RUN git clone https://sourceware.org/git/systemtap.git -b $SYSTEMTAP_GIT_VERSION /usr/src/systemtap
 RUN cd /usr/src/systemtap && \
@@ -39,6 +44,7 @@ RUN cd /usr/src/systemtap && \
     make && \
     make install
 
+# Install kpatch from git
 ARG KPATCH_GIT_VERSION=v0.9.3
 RUN git clone https://github.com/dynup/kpatch -b $KPATCH_GIT_VERSION /usr/src/kpatch
 RUN cd /usr/src/kpatch && \
