@@ -11,13 +11,12 @@ deb http://ddebs.ubuntu.com bionic-proposed main restricted universe multiverse 
 " > /etc/apt/sources.list.d/ddebs.list
 RUN apt-get install -y --no-install-recommends gnupg
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F2EDC64DC5AEE1F6B9C621F0C8CAB6595FDFF622
-RUN apt-get update
 
 SHELL ["/bin/bash", "-c"]
 ARG UBUNTU_KERNEL_VERSION=4.15.0-23-generic
 ARG UBUNTU_GCC_VERSION=4:7.3.0-3ubuntu2
 ARG UBUNTU_GCC7_VERSION=7.3.0-16ubuntu3
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     {gcc,cpp,g++}=${UBUNTU_GCC_VERSION} \
     {gcc-7,cpp-7,libgcc-7-dev,gcc-7-base,libasan4,libubsan0,libcilkrts5,g++-7,libstdc++-7-dev}=${UBUNTU_GCC7_VERSION} \
     linux-headers-${UBUNTU_KERNEL_VERSION} \
