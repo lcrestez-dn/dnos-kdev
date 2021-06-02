@@ -24,7 +24,7 @@ Subcommands:
 ------------
 
 run
-    Run shell command inside the container (default is interactive shell
+    Run shell command inside the container (default is interactive shell)
 stap
     Run stap in container with correct -r argument
 remote-staprun
@@ -32,12 +32,15 @@ remote-staprun
 kpatch-build
     Run kpatch-build inside the container
 prepare-source
-    Prepare kernel given via --sourcedir.
+    Prepare kernel given via --sourcedir
 
-Default is to run an interactive shell.
+Default is to run an interactive shell inside the container.
 
-Subcommands with automatically receive "correct" arguments to reference the
-target kernel so \`stap\` is equivalent to \`run stap -r $kver\`
+Subcommands will automatically receive "correct" arguments to reference the
+target kernel so \`stap\` is equivalent to \`run stap -r $kver\`.
+
+The current working directory is mounted inside the docker container (at
+/mnt/cwd) so path references under ./ usually work but not externally.
 MSG
 }
 
