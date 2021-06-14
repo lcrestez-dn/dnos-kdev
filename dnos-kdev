@@ -19,6 +19,9 @@ Options:
 --extra-args-stap ARGS          Extra arguments for stap
 --extra-args-staprun ARGS       Extra arguments for staprun
 --extra-args-stapmod ARGS       Extra arguments for stap module
+--use-ubuntu-stap               Use ubuntu /usr/bin/stap inside docker
+--use-upstream-stap             Use upstream /usr/local/bin/stap inside docker.
+    This requires updated staprun on remote target
 -u, --match-uidgid              Match current uid/gid
 
 Subcommands:
@@ -55,6 +58,7 @@ parse_args()
     opt_extra_args_staprun=()
     opt_extra_args_stapmod=()
     opt_sourcedir=
+    opt_stap_exe=/usr/bin/stap
 
     # Does not change easily:
     kver=4.15.0-23-generic
@@ -70,6 +74,8 @@ extra-args-docker:,\
 extra-args-stap:,\
 extra-args-staprun:,\
 extra-args-stapmod:,\
+use-ubuntu-stap,\
+use-upstream-stap,\
 match-uidgid,\
 dry-run"
 
@@ -98,6 +104,8 @@ dry-run"
         --extra-args-stap) shift; opt_extra_args_stap+=($1) ;;
         --extra-args-staprun) shift; opt_extra_args_staprun+=($1) ;;
         --extra-args-stapmod) shift; opt_extra_args_stapmod+=($1) ;;
+        --use-ubuntu-stap) opt_stap_exe=/usr/bin/stap ;;
+        --use-upstream-stap) opt_stap_exe=/usr/local/bin/stap ;;
         -u|--match-uidgid) opt_match_uidgid=1 ;;
         --)
             if [[ $# == 1 ]]; then
@@ -225,7 +233,7 @@ main()
         DOCKER_ARGS+=(-v /root/.systemtap:/root/.systemtap)
         stap_modname="stap"
         stap_modfile="$stap_modname.ko"
-        docker_run stap -r"$kver" -p4 -m "$stap_modname" "${opt_extra_args_stap[@]}" "${opt_extra_args[@]}"
+        docker_run "$opt_stap_exe" -r"$kver" -p4 -m "$stap_modname" "${opt_extra_args_stap[@]}" "${opt_extra_args[@]}"
         remote_tmpdir="/tmp/"
         dry_wrap scp "$stap_modfile" "$opt_ssh_remote:$remote_tmpdir"
         dry_wrap_exec ssh -t "$opt_ssh_remote" staprun \
