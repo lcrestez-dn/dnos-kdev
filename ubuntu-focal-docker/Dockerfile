@@ -38,7 +38,7 @@ RUN mkdir -p /usr/src
 #RUN tar -C /usr/src -xf /usr/src/linux-source-5.4.0.tar.bz2
 
 # Install systemtap from git
-ARG SYSTEMTAP_GIT_VERSION=release-4.5
+ARG SYSTEMTAP_GIT_VERSION=release-4.2
 RUN git clone https://sourceware.org/git/systemtap.git -b $SYSTEMTAP_GIT_VERSION /usr/src/systemtap
 RUN cd /usr/src/systemtap && \
     ./configure --without-python2-probes && \
