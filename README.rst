@@ -1,6 +1,11 @@
 dnos-kdev: Kernel tool for dnos
 
-This run kernel debug tools inside a docker container
+This tools installs and runs kernel development packages for a specific distro
+version inside a docker container. This allows using tools requiring exact
+binary compatibility.
+
+The installed packages include compilers, kernel images, debug symbols,
+kpatch-build and systemtap.
 
 Options:
 --------
@@ -18,7 +23,7 @@ Options:
 --use-upstream-stap             Use upstream /usr/local/bin/stap inside docker.
     This requires updated staprun on remote target
 -u, --match-uidgid              Match current uid/gid
---focal                         Use ubuntu focal 20.04
+--focal                         Use ubuntu focal 20.04 (default)
 --bionic                        Use ubuntu focal 18.04
 
 Subcommands:
