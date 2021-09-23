@@ -17,11 +17,12 @@ ARG UBUNTU_KERNEL_VERSION=5.4.0-73-generic
 ARG UBUNTU_GCC_VERSION=4:9.3.0-1ubuntu2
 ARG UBUNTU_GCC_MAJOR=9
 ARG UBUNTU_GCC9_VERSION=9.3.0-17ubuntu1~20.04
-RUN apt-get update && apt show linux-source-5.4.0
+RUN apt-get update
 RUN apt-get update && apt-get install -y --no-install-recommends \
     {gcc,cpp,g++}=${UBUNTU_GCC_VERSION} \
     {gcc-9,cpp-9,libgcc-9-dev,gcc-9-base,g++-9,libstdc++-9-dev}=${UBUNTU_GCC9_VERSION} \
     linux-headers-${UBUNTU_KERNEL_VERSION} \
+    linux-source-5.4.0=5.4.0-73.82 \
     linux-image-${UBUNTU_KERNEL_VERSION} \
     linux-image-${UBUNTU_KERNEL_VERSION}-dbgsym \
     ca-certificates \
