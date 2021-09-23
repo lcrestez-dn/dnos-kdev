@@ -196,7 +196,13 @@ docker_run()
 prepare_source()
 {
     echo >&2 "assume $(printf %q "$opt_sourcedir") is kernel source accessible from docker"
-    docker_run cp /usr/src/linux-headers-$kver/scripts/ubuntu-retpoline-extract-one "$opt_sourcedir/scripts/"
+    # HACKS:
+    if [[ $kver = 4.15.0-23-generic ]]; then
+        docker_run cp /usr/src/linux-headers-$kver/scripts/ubuntu-retpoline-extract-one "$opt_sourcedir/scripts/"
+    fi
+    if [[ $kver = 5.4.0-73-generic ]]; then
+        docker_run cp /usr/src/linux-source-5.4.0/debian/canonical-certs.pem "$opt_sourcedir/debian/"
+    fi
     docker_run cp /boot/config-$kver "$opt_sourcedir/.config"
 }
 
