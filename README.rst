@@ -43,7 +43,24 @@ prepare-source
 Default is to run an interactive shell inside the container.
 
 Subcommands will automatically receive "correct" arguments to reference the
-target kernel so `stap` is equivalent to `run stap -r `.
+target kernel so ``stap`` is equivalent to ``run stap -r $kver``.
 
 The current working directory is mounted inside the docker container (at
 /mnt/cwd) so path references under ./ usually work but not externally.
+
+Building kpatch modules:
+------------------------
+If using kernel source from git it needs to patch precisely, example for focal:
+
+* Remote is git://kernel.ubuntu.com/ubuntu/ubuntu-focal.git
+* Tag is Ubuntu-5.4.0-73.82
+
+Some stuff are not inside ubuntu's linux git, they can be copied from
+linux-source inside the container. This can be done by prepare-source.
+
+Example::
+
+    dnos-kdev -s . prepare-source
+    dnos-kdev -s . kpatch-build -t vmlinux some.diff
+
+The kernel source should be unpatched, all changes should be in the diff file.
