@@ -263,6 +263,8 @@ main()
         # override the kernel version. Do the same through MAKEFLAGS in order
         # to match modmagic.
         export MAKEFLAGS="KERNELVERSION=$kver $MAKEFLAGS"
+        # debian scripts pass CONFIG_DEBUG_SECTION_MISMATCH=y
+        export MAKEFLAGS="CONFIG_DEBUG_SECTION_MISMATCH=y $MAKEFLAGS"
         DOCKER_ARGS+=(-e MAKEFLAGS)
         args=(
             --vmlinux /usr/lib/debug/boot/vmlinux-"$kver"
