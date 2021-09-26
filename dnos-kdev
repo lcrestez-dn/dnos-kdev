@@ -28,6 +28,8 @@ Options:
 --use-upstream-stap             Use upstream /usr/local/bin/stap inside docker.
     This requires updated staprun on remote target
 -u, --match-uidgid              Match current uid/gid
+--auto-prepare-source           Automatically prepare source for kpatch-build (default)
+--no-auto-prepare-source        Opposite of --auto-prepare-source
 --focal                         Use ubuntu focal 20.04 (default)
 --bionic                        Use ubuntu focal 18.04
 
@@ -61,11 +63,10 @@ If using kernel source from git it needs to patch precisely, example for focal:
 * Tag is Ubuntu-5.4.0-73.82
 
 Some stuff are not inside ubuntu's linux git, they can be copied from
-linux-source inside the container. This can be done by ``prepare-source``.
+linux-source inside the container.
 
 Example::
 
-    dnos-kdev -s . prepare-source
     dnos-kdev -s . kpatch-build -t vmlinux some.diff
 
 The kernel source should be unpatched, all changes should be in the diff file.
@@ -85,6 +86,7 @@ parse_args()
     opt_stap_exe=/usr/bin/stap
 
     opt_os_release=focal
+    opt_auto_prepare_source=1
 
     # Scan args
     local LONG_OPTS=\
@@ -100,6 +102,8 @@ extra-args-stapmod:,\
 use-ubuntu-stap,\
 use-upstream-stap,\
 match-uidgid,\
+auto-prepare-source,\
+no-auto-prepare-source,\
 focal,bionic,\
 dry-run"
 
@@ -133,6 +137,8 @@ dry-run"
         --focal) opt_os_release=focal ;;
         --bionic) opt_os_release=bionic ;;
         -u|--match-uidgid) opt_match_uidgid=1 ;;
+        --auto-prepare-source) opt_auto_prepare_source=1 ;;
+        --no-auto-prepare-source) opt_auto_prepare_source=0 ;;
         --)
             if [[ $# == 1 ]]; then
                 opt_subcmd="run"
@@ -262,6 +268,9 @@ main()
             --vmlinux /usr/lib/debug/boot/vmlinux-"$kver"
             --config /boot/config-"$kver"
         )
+        if [[ $opt_auto_prepare_source == 1 ]]; then
+            prepare_source
+        fi
         if [[ -n $opt_sourcedir ]]; then
             args+=(--sourcedir "$opt_sourcedir")
         fi
