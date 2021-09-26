@@ -266,13 +266,13 @@ main()
         # debian scripts pass CONFIG_DEBUG_SECTION_MISMATCH=y
         export MAKEFLAGS="CONFIG_DEBUG_SECTION_MISMATCH=y $MAKEFLAGS"
         DOCKER_ARGS+=(-e MAKEFLAGS)
+        if [[ $opt_auto_prepare_source == 1 && -n $opt_sourcedir ]]; then
+            prepare_source
+        fi
         args=(
             --vmlinux /usr/lib/debug/boot/vmlinux-"$kver"
             --config /boot/config-"$kver"
         )
-        if [[ $opt_auto_prepare_source == 1 ]]; then
-            prepare_source
-        fi
         if [[ -n $opt_sourcedir ]]; then
             args+=(--sourcedir "$opt_sourcedir")
         fi
