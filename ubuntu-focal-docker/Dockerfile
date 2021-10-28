@@ -29,8 +29,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dumb-init \
     fakeroot \
     git \
-    kpatch \
-    kpatch-build \
     systemtap
 
 RUN mkdir -p /usr/src
