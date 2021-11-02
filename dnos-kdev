@@ -238,6 +238,23 @@ prepare_source()
     docker_run cp /boot/config-$kver "$opt_sourcedir/.config"
 }
 
+auto_prepare_source()
+{
+    if [[ $opt_auto_prepare_source == 1 && -n $opt_sourcedir ]]; then
+        prepare_source
+    fi
+}
+
+export_makeflags()
+{
+    # debian scripts pass an explicit KERNELVERSION= argument to make to
+    # override the kernel version. Do the same through MAKEFLAGS in order
+    # to match modmagic.
+    export MAKEFLAGS="KERNELVERSION=$kver $MAKEFLAGS"
+    # debian scripts pass CONFIG_DEBUG_SECTION_MISMATCH=y
+    export MAKEFLAGS="CONFIG_DEBUG_SECTION_MISMATCH=y $MAKEFLAGS"
+}
+
 main()
 {
     parse_args "$@"
@@ -268,16 +285,9 @@ main()
         ;;
     kpatch-build)
         DOCKER_ARGS+=(-v ~/.kpatch:/root/.kpatch)
-        # debian scripts pass an explicit KERNELVERSION= argument to make to
-        # override the kernel version. Do the same through MAKEFLAGS in order
-        # to match modmagic.
-        export MAKEFLAGS="KERNELVERSION=$kver $MAKEFLAGS"
-        # debian scripts pass CONFIG_DEBUG_SECTION_MISMATCH=y
-        export MAKEFLAGS="CONFIG_DEBUG_SECTION_MISMATCH=y $MAKEFLAGS"
+        export_makeflags
         DOCKER_ARGS+=(-e MAKEFLAGS)
-        if [[ $opt_auto_prepare_source == 1 && -n $opt_sourcedir ]]; then
-            prepare_source
-        fi
+        auto_prepare_source
         if [[ -n $KPATCH_SRCDIR ]]; then
             DOCKER_ARGS+=(-v "$KPATCH_SRCDIR:/usr/src/kpatch")
             KPATCH_BUILD_EXE=/usr/src/kpatch/kpatch-build/kpatch-build
