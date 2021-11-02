@@ -51,6 +51,9 @@ remote-staprun
     Build stap.ko inside container and run on --ssh-remote
 kpatch-build
     Run kpatch-build inside the container
+kernel-build
+    Run standard kernel build inside the container.
+    This is similar to \`\`make -C $SRC\`\` but should match distro binaries.
 prepare-source
     Prepare kernel given via --sourcedir
 
@@ -302,6 +305,16 @@ main()
         fi
         KPATCH_BUILD_EXE=${KPATCH_BUILD_EXE:-kpatch-build}
         docker_run "$KPATCH_BUILD_EXE" "${args[@]}" "${opt_extra_args[@]}"
+        ;;
+    kernel-build)
+        export_makeflags
+        DOCKER_ARGS+=(-e MAKEFLAGS)
+        auto_prepare_source
+        args=()
+        if [[ -n $opt_sourcedir ]]; then
+            args+=(-C "$opt_sourcedir")
+        fi
+        docker_run make "${args[@]}" "${opt_extra_args[@]}"
         ;;
     stap)
         DOCKER_ARGS+=(-v /root/.systemtap:/root/.systemtap)
