@@ -9,23 +9,25 @@ deb http://ddebs.ubuntu.com focal main restricted universe multiverse \n\
 deb http://ddebs.ubuntu.com focal-updates main restricted universe multiverse \n\
 deb http://ddebs.ubuntu.com focal-proposed main restricted universe multiverse \n\
 " > /etc/apt/sources.list.d/ddebs.list
-RUN apt-get install -y --no-install-recommends gnupg
+RUN apt-get install -y --no-install-recommends gnupg curl ca-certificates
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F2EDC64DC5AEE1F6B9C621F0C8CAB6595FDFF622
 
 SHELL ["/bin/bash", "-c"]
-ARG UBUNTU_KERNEL_VERSION=5.4.0-73-generic
+
 ARG UBUNTU_GCC_VERSION=4:9.3.0-1ubuntu2
 ARG UBUNTU_GCC_MAJOR=9
 ARG UBUNTU_GCC9_VERSION=9.3.0-17ubuntu1~20.04
-RUN apt-get update
+
+COPY apt-from-librarian .
+RUN apt-get update && bash -x apt-from-librarian
+
+ARG UBUNTU_KERNEL_VERSION=5.4.0-73-generic
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    {gcc,cpp,g++}=${UBUNTU_GCC_VERSION} \
-    {gcc-9,cpp-9,libgcc-9-dev,gcc-9-base,g++-9,libstdc++-9-dev}=${UBUNTU_GCC9_VERSION} \
     linux-headers-${UBUNTU_KERNEL_VERSION} \
     linux-source-5.4.0=5.4.0-73.82 \
     linux-image-${UBUNTU_KERNEL_VERSION} \
     linux-image-${UBUNTU_KERNEL_VERSION}-dbgsym \
-    ca-certificates \
     dumb-init \
     fakeroot \
     git \
