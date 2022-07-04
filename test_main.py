@@ -25,3 +25,11 @@ def test_run_dry():
     assert "DRY: docker build" in proc.stderr
     assert "DRY: docker run" in proc.stderr
     assert proc.returncode == 0
+
+
+def test_build_focal():
+    subprocess.run(["docker", "build", "./ubuntu-focal-docker"], check=True)
+
+
+def test_build_bionic():
+    subprocess.run(["docker", "build", "./ubuntu-bionic-docker"], check=True)
