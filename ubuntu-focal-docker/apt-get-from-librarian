@@ -1,0 +1,78 @@
+#! /bin/bash
+
+set -e
+
+print_help()
+{
+    cat >&2 <<MSG
+apt-get-from-librarian: Install packages from launchpad librarian
+=================================================================
+
+This tool can install old version of ubuntu packages from launchpad librarian.
+
+Usage:
+
+    # apt-get-from-librarian [<PACKAGE1=VERSION1>...]
+
+Example:
+
+    # apt-get-from-librarian gcc-9=9.3.0-17ubuntu1~20.04 g++-9=9.3.0-17ubuntu1~20.04
+
+It is implemented as a standalone single-file bash script.
+
+Homepage: https://gitlab.com/cdleonard/apt-get-from-librarian
+MSG
+}
+
+get_librarian_link()
+{
+    sed -ne 's/.*href="\(http:\/\/launchpadlibrarian.*\)".*/\1/p'
+}
+
+exit_trap()
+{
+    rm -rf "$tmpdir"
+}
+
+main()
+{
+    local pkg_arg
+    local link
+    local link_list=()
+    local dpkg_list=()
+
+    if [[ $1 == -h || $1 == --help ]]; then
+        print_help
+        exit 2
+    fi
+
+    tmpdir=$(mktemp -d)
+    trap exit_trap EXIT
+
+    for pkg_arg; do
+        local pn pv
+        if [[ $pkg_arg != *=* ]]; then
+            echo "Bad package argument $pkg_arg needs to be of the form PKG=VER"
+        fi
+        pn=${pkg_arg%%=*}
+        pv=${pkg_arg#*=}
+        link=$(curl -s "https://launchpad.net/ubuntu/focal/amd64/$pn/$pv" | get_librarian_link)
+        if [[ -z $link ]]; then
+            echo "FAIL on $pn=$pv"
+            exit 1
+        fi
+        link_list+=("$link")
+    done
+    (
+        cd "$tmpdir"
+        curl_cmd=(curl -q -Z)
+        for link in "${link_list[@]}"; do
+            curl_cmd+=(-O "$link")
+            dpkg_list+=(./"$(basename "$link")")
+        done
+        "${curl_cmd[@]}"
+        apt-get install -y --no-install-recommends "${dpkg_list[@]}"
+    )
+}
+
+main "$@"

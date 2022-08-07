@@ -6,8 +6,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN printf "\
 deb http://ddebs.ubuntu.com focal main restricted universe multiverse \n\
-deb http://ddebs.ubuntu.com focal-updates main restricted universe multiverse \n\
-deb http://ddebs.ubuntu.com focal-proposed main restricted universe multiverse \n\
 " > /etc/apt/sources.list.d/ddebs.list
 RUN apt-get install -y --no-install-recommends gnupg curl ca-certificates
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F2EDC64DC5AEE1F6B9C621F0C8CAB6595FDFF622
@@ -17,23 +15,26 @@ SHELL ["/bin/bash", "-c"]
 ARG UBUNTU_GCC_VERSION=4:9.3.0-1ubuntu2
 ARG UBUNTU_GCC_MAJOR=9
 ARG UBUNTU_GCC9_VERSION=9.3.0-17ubuntu1~20.04
-
-COPY apt-from-librarian .
-RUN apt-get update && bash -x apt-from-librarian
-
 ARG UBUNTU_KERNEL_VERSION=5.4.0-73-generic
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    linux-headers-${UBUNTU_KERNEL_VERSION} \
-    linux-source-5.4.0=5.4.0-73.82 \
-    linux-image-${UBUNTU_KERNEL_VERSION} \
-    linux-image-${UBUNTU_KERNEL_VERSION}-dbgsym \
-    dumb-init \
-    fakeroot \
-    git \
-    kpatch \
-    kpatch-build \
-    systemtap
+COPY apt-get-from-librarian .
+
+RUN apt-get update && \
+    ./apt-get-from-librarian \
+        {gcc,cpp,g++}=${UBUNTU_GCC_VERSION} \
+        {gcc-9,cpp-9,libgcc-9-dev,gcc-9-base,g++-9,libstdc++-9-dev,libasan5}=${UBUNTU_GCC9_VERSION} \
+        linux-image-unsigned-5.4.0-73-generic-dbgsym=5.4.0-73.82 \
+        linux-image-5.4.0-73-generic-dbgsym=5.4.0-73.82 \
+    && apt-get install -y --no-install-recommends \
+        linux-headers-${UBUNTU_KERNEL_VERSION} \
+        linux-source-5.4.0=5.4.0-73.82 \
+        linux-image-${UBUNTU_KERNEL_VERSION} \
+        dumb-init \
+        fakeroot \
+        git \
+        kpatch \
+        kpatch-build \
+        systemtap
 
 RUN mkdir -p /usr/src
 
